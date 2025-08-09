@@ -1,0 +1,61 @@
+# =========================
+# Node.js (backend y frontend)
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Archivos de entorno
+# =========================
+.env
+backend/.env
+frontend/.env
+
+# =========================
+# Logs
+# =========================
+logs
+*.log
+*.log.*
+backend/logs
+frontend/logs
+
+# =========================
+# Directorios de build y cache
+# =========================
+dist/
+build/
+.cache/
+.tmp/
+coverage/
+
+# =========================
+# Docker
+# =========================
+*.pid
+*.seed
+*.pid.lock
+docker-compose.override.yml
+
+# Volúmenes persistentes (ignorar datos reales de contenedores)
+mssql-data/
+backend-node-modules/
+frontend-node-modules/
+
+# =========================
+# SO y editor
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Otros
+# =========================
+*.tgz

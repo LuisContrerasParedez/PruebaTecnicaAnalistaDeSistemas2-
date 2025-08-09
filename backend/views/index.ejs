@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Backend API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      text-align: center;
+      padding: 40px;
+    }
+    h1 {
+      color: #2c7be5;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 10px 0;
+    }
+    a {
+      text-decoration: none;
+      color: #2c7be5;
+      font-weight: bold;
+    }
+    a:hover {
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Backend API</h1>
+  <p>Servidor levantado correctamente en el puerto <strong><%= port %></strong></p>
+  <ul>
+    <li><a href="/api/health">Ver estado (/api/health)</a></li>
+    <li><a href="/api/docs">Documentación Swagger (/api/docs)</a></li>
+    <li><a href="/api/acciones">Lista de acciones (/api/acciones)</a></li>
+  </ul>
+</body>
+</html>

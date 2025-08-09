@@ -1,0 +1,91 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${DB_SA_PASSWORD}
+    ports:
+      - "11433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/1433'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  db-init:
+    build:
+      context: ./db
+      dockerfile: Dockerfile.tools18
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_SA_PASSWORD=${DB_SA_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    volumes:
+      - ./db:/db
+    entrypoint: ["/bin/bash"]
+    command:
+      - -lc
+      - |-
+        set -Eeuo pipefail
+
+        # sqlcmd ya está en PATH por la imagen tools18
+        echo "ℹ️ Usando: $(command -v sqlcmd)"
+
+        # Intento visible (así ves cualquier error real)
+        until sqlcmd -S db -U sa -P "$${DB_SA_PASSWORD}" -C -l 5 -Q "SELECT 1"; do
+          echo '⏳ Esperando a SQL Server...'; sleep 2
+        done
+
+        echo '✅ Creando base si no existe...'
+        sqlcmd -S db -U sa -P "$${DB_SA_PASSWORD}" -C -b -Q "IF DB_ID('$${DB_NAME}') IS NULL CREATE DATABASE [$${DB_NAME}];"
+
+        # Ejecutar scripts en orden alfabético (recomiendo prefijos 01-, 02-)
+        shopt -s nullglob
+        for f in /db/*.sql; do
+          echo "→ $$f"
+          sqlcmd -S db -U sa -P "$${DB_SA_PASSWORD}" -C -d "$${DB_NAME}" -b -e -i "$$f"
+        done
+
+        echo '🎉 Inicialización completada.'
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - backend-node-modules:/app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+
+volumes:
+  mssql-data:
+  backend-node-modules:
+  frontend-node-modules:
