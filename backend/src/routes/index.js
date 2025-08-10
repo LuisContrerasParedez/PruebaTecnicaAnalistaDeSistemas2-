@@ -5,6 +5,7 @@ import { usuariosRoutes } from './usuarios/usuarios.routes.js';
 import { rolesRoutes } from '../modules/roles/roles.routes.js';
 import { catalogosRoutes } from '../modules/catalogos/catalogo.routes.js';
 import { expedientesRoutes} from '../modules/expedientes/expedientes.routes.js';
+import {indiciosRoutes} from '../modules/indicios/indicios.routes.js';
 
 
 const r = Router();
@@ -13,5 +14,7 @@ r.use('/auth', auth);
 r.use('/expedientes', expedientesRoutes);
 r.use('/catalogos', catalogosRoutes);
 r.use('/roles', rolesRoutes);
-r.use('/usuarios', usuariosRoutes); 
+r.use('/usuarios', usuariosRoutes);
+r.use('/indicios', indiciosRoutes);
+
 export default r;

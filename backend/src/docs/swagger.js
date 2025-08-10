@@ -206,6 +206,55 @@ const options = {
           required: ['justificacion'],
           properties: { justificacion: { type: 'string', minLength: 10 } }
         },
+        Indicio: {
+          type: 'object',
+          properties: {
+            CodigoIndicio: { type: 'integer' },
+            CodigoExpediente: { type: 'integer' },
+            codigo_indicio: { type: 'string', example: 'EXP-DICRI-2025-000123-I001' },
+            tipo: { type: 'string' },
+            descripcion: { type: 'string' },
+            color: { type: 'string' },
+            tamano: { type: 'string' },
+            peso: { type: 'number', format: 'decimal' },
+            ubicacion: { type: 'string', example: 'Escena' },
+            CodigoTecnico: { type: 'integer' },
+            fecha_hora: { type: 'string', format: 'date-time' },
+            observaciones: { type: 'string' },
+            creado_en: { type: 'string', format: 'date-time' },
+            actualizado_en: { type: 'string', format: 'date-time' }
+          }
+        },
+        IndicioCreate: {
+          type: 'object',
+          required: ['expedienteId', 'tipo'],
+          properties: {
+            expedienteId: { type: 'integer' },
+            tipo: { type: 'string' },
+            descripcion: { type: 'string' },
+            color: { type: 'string' },
+            tamano: { type: 'string' },
+            peso: { type: 'number' },
+            ubicacion: { type: 'string' },
+            codigoTecnico: { type: 'integer', description: 'solo pruebas sin auth' },
+            fecha_hora: { type: 'string', format: 'date-time' },
+            observaciones: { type: 'string' }
+          }
+        },
+        IndicioUpdate: {
+          type: 'object',
+          properties: {
+            tipo: { type: 'string' },
+            descripcion: { type: 'string' },
+            color: { type: 'string' },
+            tamano: { type: 'string' },
+            peso: { type: 'number' },
+            ubicacion: { type: 'string' },
+            fecha_hora: { type: 'string', format: 'date-time' },
+            observaciones: { type: 'string' }
+          }
+        },
+
 
 
 

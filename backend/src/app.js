@@ -14,6 +14,8 @@ import usuariosRoutes from './modules/usuarios/usuarios.routes.js';
 import rolesRoutes from './modules/roles/roles.routes.js';
 import catalogosRoutes from './modules/catalogos/catalogo.routes.js';
 import expedientesRoutes from './modules/expedientes/expedientes.routes.js';
+import indiciosRoutes from './modules/indicios/indicios.routes.js';
+
 
 
 
@@ -46,6 +48,7 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/roles', rolesRoutes);
 app.use('/api/catalogos', catalogosRoutes);
 app.use('/api/expedientes', expedientesRoutes);
+app.use('/api/indicios', indiciosRoutes);
 
 // Para el resto de módulos cuando los tengas agrupados:
 // app.use('/api', apiRoutes);
