@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Box, Container, Heading, HStack, VStack, Stack,
   Table, Thead, Tbody, Tr, Th, Td,
-  Input, Select, Button, IconButton, Tag, Text,
+  Input, Select, Button, IconButton, Tag, Text, Tooltip,
   SimpleGrid, FormControl, FormLabel, Skeleton, Spinner,
   useColorModeValue, Card, CardBody
 } from '@chakra-ui/react';
@@ -29,16 +29,34 @@ const getExpedienteId = (r) => {
   const n = candidates.map((v) => Number(v)).find((x) => Number.isInteger(x) && x > 0);
   return n ?? null;
 };
+const getTecnicoIdFromRow = (r) =>
+  Number(r?.CodigoTecnico ?? r?.tecnicoId ?? r?.TecnicoId ?? r?.codigoTecnico ?? 0) || 0;
+
 const getNoExpediente = (r) =>
   r?.no_expediente ?? r?.NoExpediente ?? r?.codigo ?? r?.Codigo ?? '';
 const resolveEstado = (r) => r?.estado ?? r?.Estado ?? 'Borrador';
 const fmtDate = (s) => (s ? new Date(s).toLocaleString() : '—');
 
+const dedupeById = (arr) => {
+  const m = new Map();
+  for (const r of arr) {
+    const id = getExpedienteId(r);
+    if (id != null) m.set(id, r);
+  }
+  return Array.from(m.values());
+};
+
 export default function ExpedientesTecnicoList() {
   const navigate = useNavigate();
   const { user } = useAppSelector(selectAuth);
 
-  // Técnico actual (ajusta según tu auth)
+  // roles
+  const rolName = (user?.rol || user?.rol_nombre || '').toString().toLowerCase();
+  const isAdmin = rolName.includes('admin') || user?.CodigoRol === 1;
+  const isCoordinator = rolName.includes('coordinador') || user?.CodigoRol === 2;
+  const isReviewer = isAdmin || isCoordinator;
+
+  // Técnico actual
   const tecnicoId = useMemo(
     () => Number(user?.CodigoTecnico ?? user?.CodigoUsuario ?? user?.sub ?? user?.id ?? 0) || 0,
     [user]
@@ -46,10 +64,10 @@ export default function ExpedientesTecnicoList() {
 
   // Filtros
   const [q, setQ] = useState('');
-  const [estado, setEstado] = useState(''); // '', Borrador, EnRevision, Rechazado, Aprobado
+  const [estado, setEstado] = useState('');
   const [desde, setDesde] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+    return d.toISOString().slice(0, 10);
   });
   const [hasta, setHasta] = useState(() => new Date().toISOString().slice(0, 10));
   const [page, setPage] = useState(1);
@@ -64,16 +82,29 @@ export default function ExpedientesTecnicoList() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const params = {
-        page, pageSize, tecnicoId,
+
+      const base = {
+        page, pageSize,
         q: q || undefined,
         estado: estado || undefined,
         desde: desde || undefined,
         hasta: hasta || undefined,
       };
-      const { data } = await api.get('/expedientes', { params });
-      setItems(data?.data ?? []);
-      setTotal(data?.total ?? 0);
+
+      // 1) siempre: los propios del técnico logueado
+      const ownParams = { ...base, tecnicoId };
+      const own = await api.get('/expedientes', { params: ownParams });
+      let combined = own?.data?.data ?? [];
+
+      // 2) si es admin/coordinador: agregar TODOS EnRevision (sin tecnicoId)
+      if (isReviewer) {
+        const reviewParams = { ...base, tecnicoId: undefined, estado: 'EnRevision' };
+        const review = await api.get('/expedientes', { params: reviewParams });
+        combined = dedupeById([...(own?.data?.data ?? []), ...(review?.data?.data ?? [])]);
+      }
+
+      setItems(combined);
+      setTotal(combined.length); // si tu backend pagina, puedes reemplazar por data.total
     } catch (e) {
       console.error('Error list expedientes:', e);
       setItems([]);
@@ -87,7 +118,7 @@ export default function ExpedientesTecnicoList() {
     if (!tecnicoId) return;
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tecnicoId, q, estado, desde, hasta, page, pageSize]);
+  }, [tecnicoId, q, estado, desde, hasta, page, pageSize, isReviewer]);
 
   const estadoColor = (st) => {
     const s = (st || '').toString().toLowerCase();
@@ -175,12 +206,27 @@ export default function ExpedientesTecnicoList() {
                 </Thead>
                 <Tbody>
                   {items.map((r, idx) => {
-                    const id = getExpedienteId(r);                 // ✅ ID NUMÉRICO
-                    const no = getNoExpediente(r);                 // visible
+                    const id = getExpedienteId(r);
+                    const no = getNoExpediente(r);
                     const unidad = r.unidad ?? r.Unidad ?? '—';
                     const fiscalia = r.fiscalia ?? r.Fiscalia ?? '—';
                     const creado = r.creado_en ?? r.creadoEn ?? r.created_at ?? r.fecha_registro;
                     const st = resolveEstado(r);
+
+                    // Bloquear detalles al TÉCNICO propietario cuando está EnRevision
+                    const ownerTecnicoId = getTecnicoIdFromRow(r);
+                    const isOwner = ownerTecnicoId === tecnicoId;
+                    const detailsDisabled = !isReviewer && isOwner && st === 'EnRevision';
+
+                    const detailsBtn = (
+                      <IconButton
+                        aria-label="Detalle"
+                        size="sm"
+                        icon={<ExternalLinkIcon />}
+                        isDisabled={!id || detailsDisabled}
+                        onClick={() => id && navigate(`/expedientes/${id}`, { state: { noExpediente: no } })}
+                      />
+                    );
 
                     return (
                       <Tr key={`${id ?? 'sinid'}-${idx}`}>
@@ -190,17 +236,11 @@ export default function ExpedientesTecnicoList() {
                         <Td>{fmtDate(creado)}</Td>
                         <Td><Tag colorScheme={estadoColor(st)}>{st}</Tag></Td>
                         <Td textAlign="right">
-                          <IconButton
-                            aria-label="Detalle"
-                            size="sm"
-                            icon={<ExternalLinkIcon />}
-                            isDisabled={!id}
-                            onClick={() =>
-                              id
-                                ? navigate(`/expedientes/${id}`, { state: { noExpediente: no } })
-                                : null
-                            }
-                          />
+                          {detailsDisabled ? (
+                            <Tooltip label="Bloqueado mientras está en revisión">
+                              {detailsBtn}
+                            </Tooltip>
+                          ) : detailsBtn}
                         </Td>
                       </Tr>
                     );

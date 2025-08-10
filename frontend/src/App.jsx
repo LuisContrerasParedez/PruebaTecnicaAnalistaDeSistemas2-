@@ -13,18 +13,18 @@ import Login from './pages/Login.jsx';
 // Privadas (generales)
 import Home from './pages/Home.jsx';
 
-// NUEVO: listado del técnico
+// Listado del técnico
 import ExpedientesTecnicoList from './pages/ExpedientesTecnicoList.jsx';
 
-// Este es tu componente de gestión (el que venimos usando)
-import ExpedienteGestionPage from './pages/ExpedientesList.jsx';
+// 👇 NUEVO: gestión (refactor), ahora en /pages/expedientes/
+import ExpedienteGestionPage from './pages/expedientes/ExpedienteGestionPage.jsx';
 
 // Administración (solo Admin)
 import AdminLayout  from './pages/admin/AdminLayout.jsx';
 import UsuariosPage from './pages/admin/UsuariosPage.jsx';
 import RolesPage    from './pages/admin/RolesPage.jsx';
 
-// Renderiza las rutas privadas dentro del shell (navbar + container)
+// Shell con navbar + container
 function ShellOutlet() {
   return (
     <AppShell>
@@ -37,7 +37,7 @@ function NotFound() {
   return <div style={{ padding: 24 }}>404 — Página no encontrada</div>;
 }
 
-// Wrapper para pasar :id como prop al componente de gestión
+// Pasar :id como prop al componente de gestión
 function ExpedienteDetalleWrapper() {
   const { id } = useParams();
   return <ExpedienteGestionPage expedienteId={Number(id)} />;

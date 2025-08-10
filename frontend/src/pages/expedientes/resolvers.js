@@ -1,0 +1,4 @@
+export const resolveId = (x) =>
+  x?.id ?? x?.CodigoExpediente ?? x?.codigoExpediente ?? x?.codigo ?? x?.Codigo ?? null;
+
+export const resolveEstado = (x) => x?.estado ?? x?.Estado ?? 'Borrador';
