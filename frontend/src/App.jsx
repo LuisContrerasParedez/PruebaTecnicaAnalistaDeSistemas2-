@@ -1,35 +1,38 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import { Routes, Route } from 'react-router-dom';
+import PrivateRoute from '/src/components/PrivateRoute';
+import AppShell from '/src/components/AppShell';
 
-function App() {
-  const [count, setCount] = useState(0)
+import Login from '/src/pages/Login';
+import Home from '/src/pages/Home';
+import ExpedientesList from '/src/pages/ExpedientesList';
+import ExpedienteForm from '/src/pages/ExpedienteForm';
+// import ... resto de módulos
 
+export default function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Routes>
+      {/* Rutas protegidas renderizan dentro de AppShell */}
+      <Route element={<PrivateRoute><AppShell><OutletWrapper /></AppShell></PrivateRoute>}>
+        {/* Home */}
+        <Route path="/" element={<Home />} />
+
+        {/* Expedientes */}
+        <Route path="/expedientes" element={<ExpedientesList />} />
+        <Route path="/expedientes/nuevo" element={<ExpedienteForm />} />
+        {/* <Route path="/expedientes/:id" element={<ExpedienteDetalle />} /> */}
+
+        {/* …otros módulos: usuarios, roles, reportes, etc. */}
+      </Route>
+
+      {/* Login público */}
+      <Route path="/login" element={<Login />} />
+
+      {/* 404 */}
+      <Route path="*" element={<div style={{ padding: 24 }}>404</div>} />
+    </Routes>
+  );
 }
 
-export default App
+import { Outlet } from 'react-router-dom';
+function OutletWrapper() { return <Outlet />; }
