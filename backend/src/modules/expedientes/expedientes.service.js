@@ -4,34 +4,17 @@ export async function list(q = {}) {
   const page = q.page ? parseInt(q.page, 10) : 1;
   const pageSize = q.pageSize ? parseInt(q.pageSize, 10) : 20;
 
-  // No conviertas en JS; deja que SQL lo valide y convierta de forma segura.
   const rows = await prisma.$queryRaw`
-    DECLARE @pDesdeStr NVARCHAR(30) = ${q.desde ?? null};
-    DECLARE @pHastaStr NVARCHAR(30) = ${q.hasta ?? null};
-    DECLARE @pTecStr   NVARCHAR(30) = ${q.tecnicoId ?? null};
-    DECLARE @pCooStr   NVARCHAR(30) = ${q.coordinadorId ?? null};
-
-    DECLARE @pDesde DATE = CASE WHEN @pDesdeStr IS NOT NULL AND ISDATE(@pDesdeStr) = 1
-                                THEN CONVERT(date, @pDesdeStr) ELSE NULL END;
-    DECLARE @pHasta DATE = CASE WHEN @pHastaStr IS NOT NULL AND ISDATE(@pHastaStr) = 1
-                                THEN CONVERT(date, @pHastaStr) ELSE NULL END;
-
-    DECLARE @pTec INT = CASE WHEN @pTecStr IS NOT NULL AND ISNUMERIC(@pTecStr) = 1
-                             THEN CAST(@pTecStr AS INT) ELSE NULL END;
-    DECLARE @pCoo INT = CASE WHEN @pCooStr IS NOT NULL AND ISNUMERIC(@pCooStr) = 1
-                             THEN CAST(@pCooStr AS INT) ELSE NULL END;
-
     EXEC dbo.spExpediente_List
-      @q             = ${q.q ?? null},
-      @estado        = ${q.estado ?? null},
-      @desde         = @pDesde,
-      @hasta         = @pHasta,
-      @tecnicoId     = @pTec,
-      @coordinadorId = @pCoo,
-      @page          = ${page},
-      @pageSize      = ${pageSize};
+      @q = ${q.q ?? null},
+      @estado = ${q.estado ?? null},
+      @desde = ${q.desde ?? null},
+      @hasta = ${q.hasta ?? null},
+      @tecnicoId = ${q.tecnicoId ?? null},
+      @coordinadorId = ${q.coordinadorId ?? null},
+      @page = ${page},
+      @pageSize = ${pageSize}
   `;
-
   const total = rows?.[0]?.total_count ?? 0;
   return { data: rows, page, pageSize, total };
 }

@@ -7,6 +7,8 @@ export const fetchExpedienteById = createAsyncThunk(
   'expedientes/getById',
   async (id) => {
     const { data } = await api.get(`/expedientes/${id}`);
+        console.log('[API] GET /expedientes  -> raw data:', data);
+
     return data;
   }
 );
@@ -14,9 +16,8 @@ export const fetchExpedienteById = createAsyncThunk(
 export const createExpediente = createAsyncThunk(
   'expedientes/create',
   async (payload) => {
-    // Si tu backend no toma el usuario autenticado, agrega codigoTecnico aquí:
-    // payload = { ...payload, codigoTecnico: payload.codigoTecnico ??  user?.sub ?? 2 }
     const { data } = await api.post('/expedientes', payload);
+
     return data;
   }
 );
@@ -24,34 +25,68 @@ export const createExpediente = createAsyncThunk(
 export const updateExpediente = createAsyncThunk(
   'expedientes/update',
   async ({ id, payload }) => {
-    const { data } = await api.patch(`/expedientes/${id}`, payload);
-    return data;
+    await api.patch(`/expedientes/${id}`, payload);
+    const { data } = await api.get(`/expedientes/${id}`);
+    return data; // 👈 SIEMPRE un expediente completo
   }
 );
 
 export const sendExpedienteToReview = createAsyncThunk(
   'expedientes/sendToReview',
   async ({ id, coordinadorId }) => {
-    const { data } = await api.post(`/expedientes/${id}/enviar-revision`, { coordinadorId });
-    return data;
+    await api.post(`/expedientes/${id}/enviar-revision`, { coordinadorId });
+    const { data } = await api.get(`/expedientes/${id}`);
+    return data; // 👈 expediente completo (estado = EnRevision)
   }
 );
 
 export const approveExpediente = createAsyncThunk(
   'expedientes/approve',
-  async (id) => {
-    const { data } = await api.post(`/expedientes/${id}/aprobar`);
-    return data;
+  async (id, thunkAPI) => {
+    const { getState, rejectWithValue } = thunkAPI;
+    try {
+      const state = getState();
+      const user = state?.auth?.user;
+      const hdrUserId = user?.id ?? user?.sub ?? 1;
+
+      await api.post(`/expedientes/${id}/aprobar`, null, {
+        headers: { 'x-user-id': hdrUserId }
+      });
+
+      const { data } = await api.get(`/expedientes/${id}`);
+      console.log('[approveExpediente] expediente tras aprobar (GET):', data);
+      return data;
+    } catch (err) {
+      console.error('[approveExpediente] error:', err?.response?.data ?? err);
+      return rejectWithValue(err?.response?.data ?? err.message);
+    }
   }
 );
 
 export const rejectExpediente = createAsyncThunk(
   'expedientes/reject',
-  async ({ id, justificacion }) => {
-    const { data } = await api.post(`/expedientes/${id}/rechazar`, { justificacion });
-    return data;
+  async ({ id, justificacion }, thunkAPI) => {
+    const { getState, rejectWithValue } = thunkAPI;
+    try {
+      const state = getState();
+      const user = state?.auth?.user;
+      const hdrUserId = user?.id ?? user?.sub ?? 1;
+
+
+      await api.post(`/expedientes/${id}/rechazar`, { justificacion }, {
+        headers: { 'x-user-id': hdrUserId }
+      });
+
+      const { data } = await api.get(`/expedientes/${id}`);
+      console.log('[rejectExpediente] expediente tras rechazar (GET):', data);
+      return data;
+    } catch (err) {
+      console.error('[rejectExpediente] error:', err?.response?.data ?? err);
+      return rejectWithValue(err?.response?.data ?? err.message);
+    }
   }
 );
+
 
 // Slice
 const expedientesSlice = createSlice({

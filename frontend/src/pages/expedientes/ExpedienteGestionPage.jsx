@@ -1,6 +1,10 @@
 // src/pages/expedientes/ExpedienteGestionPage.jsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Container, Divider, VStack, Text, SimpleGrid, CardBody, CardHeader, Heading, useDisclosure, useToast } from '@chakra-ui/react';
+import {
+  Box, Container, Divider, VStack, Text, SimpleGrid, CardBody, CardHeader, Heading,
+  useDisclosure, useToast
+} from '@chakra-ui/react';
+
 import Glass from './Glass';
 import ExpedienteHeader from './ExpedienteHeader';
 import ExpedienteFormSection from './ExpedienteFormSection';
@@ -49,24 +53,35 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
   const { items: usuarios, loading: usuariosLoading } = useAppSelector(selectUsuarios);
 
   // --- nuevo vs edición
-  const isNew = expedienteIdProp == null; // /expedientes/nuevo
+  const isNew = expedienteIdProp == null;
   const expedienteId = isNew ? null : (resolveId(expediente) || Number(expedienteIdProp) || null);
   const estado = isNew ? 'Borrador' : resolveEstado(expediente);
 
-  // Indicios (robusto a claves numéricas / string)
+  // Indicios
   const indicios = useMemo(() => {
     if (!expedienteId) return [];
     const byExp = indiciosState.byExpediente || {};
     return byExp[String(expedienteId)] || byExp[expedienteId] || [];
   }, [indiciosState, expedienteId]);
 
-  // Adjuntos count (para validar envío a revisión)
+  // Adjuntos
   const adjuntosKey = expedienteId ? `EXPEDIENTE:${expedienteId}` : null;
   const adjuntosCount = useMemo(() => {
     return adjuntosKey ? (adjuntosState.byEntidad?.[adjuntosKey]?.length || 0) : 0;
   }, [adjuntosState, adjuntosKey]);
 
-  // Form expediente
+   
+  useEffect(() => {
+  if (!isNew && expediente) {
+    console.log('expediente desde API', expediente); // 👈
+    setForm(toForm(expediente));
+    
+  }
+}, [isNew, expediente]);
+
+
+  
+  // Form expediente (controlado)
   const [form, setForm] = useState({
     fiscalia: '',
     unidad: '',
@@ -81,38 +96,40 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
   const indicioModal = useDisclosure();
   const [editingIndicio, setEditingIndicio] = useState(null);
 
-  // permisos de edición
   const puedeEditar = isAdmin || isCoordinator || isNew || estado === 'Borrador' || estado === 'Rechazado';
 
-  // Cargar expediente SOLO si no es nuevo
+  // Cargar expediente por id de ruta
   useEffect(() => {
-    if (!isNew && expedienteIdProp) dispatch(fetchExpedienteById(expedienteIdProp));
+    if (!isNew && expedienteIdProp) {
+      dispatch(fetchExpedienteById(expedienteIdProp));
+    }
   }, [dispatch, expedienteIdProp, isNew]);
 
-  // Sincronizar form: vacío si es nuevo, con datos si es edición
-  useEffect(() => {
-    if (isNew) {
-      setForm({
-        fiscalia: '',
-        unidad: '',
-        descripcion: '',
-        ubicacion_texto: '',
-        municipio: '',
-        departamento: ''
-      });
-    } else if (expediente) {
-      setForm({
-        fiscalia: expediente.fiscalia || '',
-        unidad: expediente.unidad || '',
-        descripcion: expediente.descripcion || '',
-        ubicacion_texto: expediente.ubicacion_texto || '',
-        municipio: expediente.municipio || '',
-        departamento: expediente.departamento || ''
-      });
-    }
-  }, [expediente, isNew]);
+  // Función de mapeo: SIEMPRE sobreescribe el form con lo de la API
+  const toForm = (exp) => ({
+    fiscalia:        exp?.fiscalia        ?? exp?.Fiscalia        ?? '',
+    unidad:          exp?.unidad          ?? exp?.Unidad          ?? '',
+    descripcion:     exp?.descripcion     ?? exp?.Descripcion     ?? '',
+    ubicacion_texto: exp?.ubicacion_texto ?? exp?.ubicacionTexto  ?? exp?.ubicacion ?? '',
+    municipio:       exp?.municipio       ?? exp?.Municipio       ?? '',
+    departamento:    exp?.departamento    ?? exp?.Departamento    ?? ''
+  });
 
-  // Cargar indicios y adjuntos SOLO si hay id (edición)
+  // Cuando llega el expediente desde la API: PISAR SIEMPRE el form y coordinador
+  useEffect(() => {
+    if (!isNew && expediente) {
+      setForm(toForm(expediente));
+      const coo =
+        expediente?.coordinadorId ??
+        expediente?.CodigoCoordinador ??
+        expediente?.coordinador?.id ??
+        expediente?.coordinador_id ??
+        '';
+      setCoordinadorId(coo !== null && coo !== undefined ? String(coo) : '');
+    }
+  }, [isNew, expediente]);
+
+  // Cargar indicios y adjuntos
   useEffect(() => {
     if (!isNew && expedienteId) {
       dispatch(fetchIndiciosByExpediente({ expedienteId }));
@@ -120,12 +137,12 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
     }
   }, [dispatch, expedienteId, isNew]);
 
-  // Cargar usuarios (coordinadores)
+  // Cargar coordinadores
   useEffect(() => {
     if (!Array.isArray(usuarios) || usuarios.length === 0) {
       dispatch(fetchUsuarios({ page: 1, pageSize: 50 }));
     }
-  }, [dispatch]);
+  }, [dispatch, usuarios]);
 
   const coordinadores = useMemo(() => {
     const arr = Array.isArray(usuarios) ? usuarios : [];
@@ -146,7 +163,7 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
 
   const onChange = (k) => (e) => setForm((s) => ({ ...s, [k]: e.target.value }));
 
-  // Guardar (crear/actualizar)
+  // Guardar
   const handleGuardar = async () => {
     try {
       if (!expedienteId) {
@@ -154,17 +171,16 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
         if (!coo || Number.isNaN(coo)) return toast({ title: 'Coordinador requerido', status: 'warning' });
         const codigoTecnico = Number(user?.CodigoTecnico ?? user?.sub ?? user?.CodigoUsuario ?? user?.id ?? 0);
         if (!codigoTecnico) return toast({ title: 'No se pudo identificar al técnico', status: 'error' });
-        const created = await dispatch(createExpediente({ ...form, codigoTecnico })).unwrap();
+        const created = await dispatch(createExpediente({ ...form, codigoTecnico, coordinadorId: coo })).unwrap();
         const newId = resolveId(created);
         if (!newId) return toast({ title: 'Expediente creado, pero no se obtuvo el ID', status: 'warning' });
         await dispatch(fetchExpedienteById(newId));
         dispatch(fetchIndiciosByExpediente({ expedienteId: newId }));
         dispatch(fetchAdjuntos({ entidad: 'EXPEDIENTE', entidadId: newId }));
-        setCoordinadorId(String(coo));
         toast({ title: 'Expediente creado', status: 'success' });
       } else {
-        await dispatch(updateExpediente({ id: expedienteId, payload: form })).unwrap();
-        await dispatch(fetchExpedienteById(expedienteId)); // refresca canonical
+        await dispatch(updateExpediente({ id: expedienteId, payload: { ...form, coordinadorId } })).unwrap();
+        await dispatch(fetchExpedienteById(expedienteId)); // refresca con valores canon
         toast({ title: 'Expediente actualizado', status: 'success' });
       }
     } catch (e) {
@@ -178,7 +194,7 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
       const coo = parseInt(coordinadorId, 10);
       if (!coo || Number.isNaN(coo)) return toast({ title: 'Coordinador requerido', status: 'warning' });
       await dispatch(sendExpedienteToReview({ id: expedienteId, coordinadorId: coo })).unwrap();
-      await dispatch(fetchExpedienteById(expedienteId)); // refresca estado EnRevision
+      await dispatch(fetchExpedienteById(expedienteId));
       toast({ title: 'Expediente enviado a revisión', status: 'success' });
     } catch (e) {
       toast({ title: 'Error al enviar a revisión', description: e.message, status: 'error' });
@@ -200,7 +216,7 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
     try {
       if (!expedienteId) return;
       await dispatch(rejectExpediente({ id: expedienteId, justificacion })).unwrap();
-      await dispatch(fetchExpedienteById(expedienteId)); // vuelve a Rechazado
+      await dispatch(fetchExpedienteById(expedienteId));
       toast({ title: 'Expediente rechazado', status: 'info' });
       rechazoModal.onClose();
     } catch (e) {
@@ -208,7 +224,7 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
     }
   };
 
-  // Indicio (crear/editar)
+  // Indicio
   const handleSaveIndicio = async (data) => {
     try {
       if (!expedienteId) {
@@ -246,7 +262,7 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
         toast({ title: 'Indicio creado', status: 'success' });
       }
 
-      await dispatch(fetchIndiciosByExpediente({ expedienteId })); // refresca lista
+      await dispatch(fetchIndiciosByExpediente({ expedienteId }));
       indicioModal.onClose();
     } catch (e) {
       toast({ title: 'Error en indicio', description: e.message, status: 'error' });
@@ -271,17 +287,15 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
     }
   };
 
-  // Loading flags
   const indiciosLoading = !!(indiciosState.loading || indiciosState.status === 'loading');
 
-  // Requisitos para enviar a revisión (y por qué está bloqueado)
+  // Requisitos para enviar a revisión
   const requisitos = {
     id: !!expedienteId,
     coordinador: !!coordinadorId,
     indicios: indicios.length > 0,
     adjuntos: adjuntosCount > 0
   };
-
   const faltantes = Object.entries(requisitos)
     .filter(([, ok]) => !ok)
     .map(([k]) => {
@@ -312,7 +326,7 @@ export default function ExpedienteGestionPage({ expedienteId: expedienteIdProp }
               onAprobar={handleAprobar}
               onRechazar={rechazoModal.onOpen}
               canEnviar={canEnviar}
-              enviarTooltip={enviarTooltip} // 👈 explicación de bloqueo
+              enviarTooltip={enviarTooltip}
             />
           </CardBody>
         </Glass>
