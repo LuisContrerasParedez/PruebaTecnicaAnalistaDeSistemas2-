@@ -4,11 +4,13 @@ import cors from 'cors';
 import morgan from 'morgan';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import accionesRoutes from './modules/acciones/acciones.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './docs/swagger.js';
 import { prisma } from './lib/prisma.js';
+
+// rutas
+import authRoutes from './modules/auth/auth.routes.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,8 +35,10 @@ app.get('/', (_req, res) => {
 // Swagger
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
-// Rutas
-app.use('/api/acciones', accionesRoutes);
+// Rutas API
+app.use('/api/auth', authRoutes);
+// Para el resto de módulos cuando los tengas agrupados:
+// app.use('/api', apiRoutes);
 
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
@@ -47,6 +51,7 @@ app.get('/api/health/db', async (_req, res) => {
   }
 });
 
+// 404 y errores
 app.use((req, res) => res.status(404).json({ error: 'Not Found', path: req.originalUrl }));
 app.use((err, _req, res, _next) => {
   console.error('❌ Error:', err);

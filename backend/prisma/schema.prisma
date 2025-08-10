@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,11 +7,175 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Accion {
-  Id            Int       @id @default(autoincrement())
-  Nombre        String    @db.NVarChar(100)
-  Descripcion   String?   @db.NVarChar(255)
-  FechaCreacion DateTime  @default(now()) @db.DateTime2
+/* =========================
+   Tablas principales (sin enums)
+   ========================= */
 
-  @@map("Acciones") 
+model Rol {
+  codigoRol Int     @id @default(autoincrement()) @map("CodigoRol")
+  nombre    String
+  permisos  String? @db.NVarChar(max)
+
+  usuarios  Usuario[]
+
+  @@map("ROL")
+}
+
+model Usuario {
+  codigoUsuario  Int       @id @default(autoincrement()) @map("CodigoUsuario")
+  nombre         String
+  correo         String    @unique
+  codigoRol      Int       @map("CodigoRol")
+  unidad         String?
+  activo         Boolean   @default(true)
+  passwordHash   String?   @db.NVarChar(255)             @map("password_hash")
+  creadoEn       DateTime  @default(now())  @map("creado_en")
+  actualizadoEn  DateTime  @updatedAt       @map("actualizado_en")
+
+  // Relaciones
+  rol                    Rol        @relation(fields: [codigoRol], references: [codigoRol], onUpdate: NoAction, onDelete: NoAction)
+  expedientesTecnico     Expediente[] @relation("ExpedientesTecnico")
+  expedientesCoordinador Expediente[] @relation("ExpedientesCoordinador")
+  indiciosRegistrados    Indicio[]    @relation("IndiciosTecnico")
+  decisiones             Decision[]   @relation("DecisionesUsuario")
+  bitacoras              Bitacora[]
+  adjuntosSubidos        Adjunto[]
+  sesiones               Sesion[]
+
+  @@map("USUARIO")
+  @@index([codigoRol], map: "IX_USUARIO_CodigoRol")
+}
+
+model Sesion {
+  codigoSesion     Int       @id @default(autoincrement()) @map("CodigoSesion")
+  codigoUsuario    Int       @map("CodigoUsuario")
+  refreshTokenHash String    @db.NVarChar(255)             @map("refresh_token_hash")
+  createdAt        DateTime  @default(now())               @map("created_at")
+  expiresAt        DateTime                               @map("expires_at")
+  revokedAt        DateTime?                              @map("revoked_at")
+  ip               String?   @db.NVarChar(64)
+  userAgent        String?   @db.NVarChar(256)             @map("user_agent")
+
+  // Relación
+  usuario Usuario @relation(fields: [codigoUsuario], references: [codigoUsuario], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("SESION")
+  @@unique([refreshTokenHash], map: "UX_SESION_refresh_hash")
+  @@index([codigoUsuario, revokedAt], map: "IX_SESION_usuario")
+}
+
+
+model Expediente {
+  codigoExpediente  Int      @id @default(autoincrement()) @map("CodigoExpediente")
+  noExpediente      String   @unique                      @map("no_expediente")
+  fiscalia          String?
+  unidad            String?
+  descripcion       String?  @db.NVarChar(max)
+  ubicacionTexto    String?  @map("ubicacion_texto")
+  municipio         String?
+  departamento      String?
+  estado            String   @default("Borrador")         // Borrador|EnRevision|Rechazado|Aprobado
+  codigoTecnico     Int      @map("CodigoTecnico")
+  codigoCoordinador Int?     @map("CodigoCoordinador")
+  creadoEn          DateTime @default(now())              @map("creado_en")
+  actualizadoEn     DateTime @updatedAt                   @map("actualizado_en")
+
+  // Relaciones (sin cascada para evitar múltiples caminos)
+  tecnico     Usuario  @relation("ExpedientesTecnico", fields: [codigoTecnico], references: [codigoUsuario], onUpdate: NoAction, onDelete: NoAction)
+  coordinador Usuario? @relation("ExpedientesCoordinador", fields: [codigoCoordinador], references: [codigoUsuario], onUpdate: NoAction, onDelete: NoAction)
+  indicios    Indicio[]
+  decisiones  Decision[]
+
+  @@map("EXPEDIENTE")
+  @@index([codigoTecnico], map: "IX_EXP_CodTecnico")
+  @@index([codigoCoordinador], map: "IX_EXP_CodCoordinador")
+  @@index([estado], map: "IX_EXP_Estado")
+}
+
+model Indicio {
+  codigoIndicio     Int       @id @default(autoincrement()) @map("CodigoIndicio")
+  codigoExpediente  Int       @map("CodigoExpediente")
+  codigoIndicioRef  String    @map("codigo_indicio")
+  tipo              String
+  descripcion       String?   @db.NVarChar(max)
+  color             String?
+  tamano            String?
+  peso              Decimal?  @db.Decimal(10, 2)
+  ubicacion         String?
+  codigoTecnico     Int       @map("CodigoTecnico")
+  fechaHora         DateTime  @map("fecha_hora")
+  observaciones     String?   @db.NVarChar(max)
+  creadoEn          DateTime  @default(now()) @map("creado_en")
+  actualizadoEn     DateTime  @updatedAt      @map("actualizado_en")
+
+  // Relaciones (sin cascada)
+  expediente  Expediente @relation(fields: [codigoExpediente], references: [codigoExpediente], onUpdate: NoAction, onDelete: NoAction)
+  tecnico     Usuario    @relation("IndiciosTecnico", fields: [codigoTecnico], references: [codigoUsuario], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("INDICIO")
+  @@index([codigoExpediente], map: "IX_IND_CodExp")
+  @@index([codigoTecnico], map: "IX_IND_CodTec")
+  @@unique([codigoExpediente, codigoIndicioRef], map: "UQ_IND_Exp_Cod")
+}
+
+model Decision {
+  codigoDecision   Int       @id @default(autoincrement()) @map("CodigoDecision")
+  codigoExpediente Int       @map("CodigoExpediente")
+  tipo             String    @default("Aprobado") // Aprobado|Rechazado
+  justificacion    String?   @db.NVarChar(max)
+  decididoPor      Int       @map("decidido_por")
+  decididoEn       DateTime  @map("decidido_en")
+
+  expediente Expediente @relation(fields: [codigoExpediente], references: [codigoExpediente], onUpdate: NoAction, onDelete: NoAction)
+  usuario    Usuario    @relation("DecisionesUsuario", fields: [decididoPor], references: [codigoUsuario], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("DECISION")
+  @@index([codigoExpediente], map: "IX_DEC_CodExp")
+  @@index([decididoPor], map: "IX_DEC_DecPor")
+}
+
+model Adjunto {
+  codigoAdjunto Int      @id @default(autoincrement()) @map("CodigoAdjunto")
+  entidad       String
+  entidadId     Int      @map("entidad_id")
+  nombreArchivo String   @map("nombre_archivo")
+  ruta          String
+  tipoMime      String   @map("tipo_mime")
+  tamanoBytes   Int      @map("tamano_bytes")
+  hashOpcional  String?  @map("hash_opcional")
+  subidoPor     Int      @map("subido_por")
+  subidoEn      DateTime @default(now()) @map("subido_en")
+
+  usuario Usuario @relation(fields: [subidoPor], references: [codigoUsuario], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("ADJUNTO")
+  @@index([entidad, entidadId], map: "IX_ADJ_Entidad")
+  @@index([subidoPor], map: "IX_ADJ_SubidoPor")
+}
+
+model Bitacora {
+  codigoBitacora Int      @id @default(autoincrement()) @map("CodigoBitacora")
+  codigoUsuario  Int      @map("CodigoUsuario")
+  accion         String
+  entidad        String
+  entidadId      Int      @map("entidad_id")
+  detalleJson    String?  @db.NVarChar(max) @map("detalle_json")
+  ip             String?
+  creadoEn       DateTime @default(now()) @map("creado_en")
+
+  usuario Usuario @relation(fields: [codigoUsuario], references: [codigoUsuario], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("BITACORA")
+  @@index([codigoUsuario], map: "IX_BIT_CodUsuario")
+  @@index([entidad, entidadId], map: "IX_BIT_Entidad")
+}
+
+model Catalogo {
+  codigoCatalogo Int     @id @default(autoincrement()) @map("CodigoCatalogo")
+  tipo           String
+  valor          String
+  activo         Boolean @default(true)
+
+  @@map("CATALOGO")
+  @@index([tipo], map: "IX_CAT_Tipo")
 }
