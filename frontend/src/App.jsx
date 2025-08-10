@@ -1,7 +1,6 @@
-
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+// src/App.jsx
+import { Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import { Suspense } from 'react';
-
 
 // Guards / Layout
 import PrivateRoute from './components/PrivateRoute.jsx';
@@ -12,15 +11,18 @@ import AppShell     from './components/AppShell.jsx';
 import Login from './pages/Login.jsx';
 
 // Privadas (generales)
-import Home            from './pages/Home.jsx';
-import ExpedientesList from './pages/ExpedientesList.jsx';
-import ExpedienteForm  from './pages/ExpedienteForm.jsx';
+import Home from './pages/Home.jsx';
+
+// NUEVO: listado del técnico
+import ExpedientesTecnicoList from './pages/ExpedientesTecnicoList.jsx';
+
+// Este es tu componente de gestión (el que venimos usando)
+import ExpedienteGestionPage from './pages/ExpedientesList.jsx';
 
 // Administración (solo Admin)
 import AdminLayout  from './pages/admin/AdminLayout.jsx';
 import UsuariosPage from './pages/admin/UsuariosPage.jsx';
 import RolesPage    from './pages/admin/RolesPage.jsx';
-import BitacoraPage from './pages/admin/BitacoraPage.jsx';
 
 // Renderiza las rutas privadas dentro del shell (navbar + container)
 function ShellOutlet() {
@@ -33,6 +35,12 @@ function ShellOutlet() {
 
 function NotFound() {
   return <div style={{ padding: 24 }}>404 — Página no encontrada</div>;
+}
+
+// Wrapper para pasar :id como prop al componente de gestión
+function ExpedienteDetalleWrapper() {
+  const { id } = useParams();
+  return <ExpedienteGestionPage expedienteId={Number(id)} />;
 }
 
 export default function App() {
@@ -48,20 +56,16 @@ export default function App() {
           <Route index element={<Home />} />
 
           {/* Expedientes */}
-          <Route path="expedientes" element={<ExpedientesList />} />
-          <Route path="expedientes/nuevo" element={<ExpedienteForm />} />
-          {/* <Route path="expedientes/:id" element={<ExpedienteDetalle />} /> */}
-          
+          <Route path="expedientes" element={<ExpedientesTecnicoList />} />
+          <Route path="expedientes/nuevo" element={<ExpedienteGestionPage />} />
+          <Route path="expedientes/:id" element={<ExpedienteDetalleWrapper />} />
 
           {/* ---------- Administración (solo admin) ---------- */}
-          {/* AdminRoute debe renderizar <Outlet /> si es admin */}
           <Route path="admin" element={<AdminRoute />}>
-            {/* AdminLayout (barra secundaria / tabs admin) */}
             <Route element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/usuarios" replace />} />
               <Route path="usuarios" element={<UsuariosPage />} />
               <Route path="roles"    element={<RolesPage />} />
-              <Route path="bitacora" element={<BitacoraPage />} />
             </Route>
           </Route>
 

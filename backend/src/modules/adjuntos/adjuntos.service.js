@@ -22,8 +22,7 @@ export async function getById(id) {
 }
 
 export async function create(actor, body) {
-  const subidoPor = actor?.sub ?? body.subidoPor ?? null;
-  if (!subidoPor) throw new Error('subidoPor requerido (usuario autenticado)');
+  const subidoPor = actor?.sub ?? actor?.id ?? 2; // Ajusta según tu auth
 
   const entidad = (body.entidad || '').toUpperCase();
 

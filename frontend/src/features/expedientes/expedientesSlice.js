@@ -1,51 +1,98 @@
+// src/features/expedientes/expedientesSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../../lib/api';
 
-export const fetchExpedientes = createAsyncThunk('expedientes/fetch', async (params={}, { rejectWithValue })=>{
-  try { const { data } = await api.get('/expedientes', { params }); return data; }
-  catch(e){ return rejectWithValue(e?.response?.data?.error || 'Error al cargar expedientes'); }
-});
-export const getExpediente = createAsyncThunk('expedientes/get', async (id, { rejectWithValue })=>{
-  try { const { data } = await api.get(`/expedientes/${id}`); return data; }
-  catch(e){ return rejectWithValue('No encontrado'); }
-});
-export const createExpediente = createAsyncThunk('expedientes/create', async (payload, { rejectWithValue })=>{
-  try { const { data } = await api.post('/expedientes', payload); return data; }
-  catch(e){ return rejectWithValue('No se pudo crear'); }
-});
-export const updateExpediente = createAsyncThunk('expedientes/update', async ({id, payload}, { rejectWithValue })=>{
-  try { const { data } = await api.patch(`/expedientes/${id}`, payload); return data; }
-  catch(e){ return rejectWithValue('No se pudo actualizar'); }
-});
-export const enviarRevision = createAsyncThunk('expedientes/enviar', async (id, { rejectWithValue })=>{
-  try { const { data } = await api.post(`/expedientes/${id}/enviar`); return data; }
-  catch(e){ return rejectWithValue('No se pudo enviar'); }
-});
-export const aprobarExpediente = createAsyncThunk('expedientes/aprobar', async (id, { rejectWithValue })=>{
-  try { const { data } = await api.post(`/expedientes/${id}/aprobar`); return data; }
-  catch(e){ return rejectWithValue('No se pudo aprobar'); }
-});
-export const rechazarExpediente = createAsyncThunk('expedientes/rechazar', async ({id, justificacion}, { rejectWithValue })=>{
-  try { const { data } = await api.post(`/expedientes/${id}/rechazar`, { justificacion }); return data; }
-  catch(e){ return rejectWithValue('No se pudo rechazar'); }
-});
+// Thunks
+export const fetchExpedienteById = createAsyncThunk(
+  'expedientes/getById',
+  async (id) => {
+    const { data } = await api.get(`/expedientes/${id}`);
+    return data;
+  }
+);
 
-const slice = createSlice({
+export const createExpediente = createAsyncThunk(
+  'expedientes/create',
+  async (payload) => {
+    // Si tu backend no toma el usuario autenticado, agrega codigoTecnico aquí:
+    // payload = { ...payload, codigoTecnico: payload.codigoTecnico ??  user?.sub ?? 2 }
+    const { data } = await api.post('/expedientes', payload);
+    return data;
+  }
+);
+
+export const updateExpediente = createAsyncThunk(
+  'expedientes/update',
+  async ({ id, payload }) => {
+    const { data } = await api.patch(`/expedientes/${id}`, payload);
+    return data;
+  }
+);
+
+export const sendExpedienteToReview = createAsyncThunk(
+  'expedientes/sendToReview',
+  async ({ id, coordinadorId }) => {
+    const { data } = await api.post(`/expedientes/${id}/enviar-revision`, { coordinadorId });
+    return data;
+  }
+);
+
+export const approveExpediente = createAsyncThunk(
+  'expedientes/approve',
+  async (id) => {
+    const { data } = await api.post(`/expedientes/${id}/aprobar`);
+    return data;
+  }
+);
+
+export const rejectExpediente = createAsyncThunk(
+  'expedientes/reject',
+  async ({ id, justificacion }) => {
+    const { data } = await api.post(`/expedientes/${id}/rechazar`, { justificacion });
+    return data;
+  }
+);
+
+// Slice
+const expedientesSlice = createSlice({
   name: 'expedientes',
-  initialState: { items: [], total:0, page:1, pageSize:20, loading:false, error:null, current:null, filters:{} },
-  reducers: { setFilters:(st,{payload})=>{ st.filters = { ...st.filters, ...payload }; } },
-  extraReducers: (b)=>{
-    b.addCase(fetchExpedientes.pending,(st)=>{ st.loading=true; st.error=null; });
-    b.addCase(fetchExpedientes.fulfilled,(st,{payload})=>{
-      st.loading=false; st.items=payload.data; st.total=payload.total; st.page=payload.page; st.pageSize=payload.pageSize;
-    });
-    b.addCase(fetchExpedientes.rejected,(st,{payload})=>{ st.loading=false; st.error=payload; });
-    b.addCase(getExpediente.fulfilled,(st,{payload})=>{ st.current=payload; });
-    b.addCase(createExpediente.fulfilled,(st,{payload})=>{ st.items.unshift(payload); st.current=payload; });
-    b.addCase(updateExpediente.fulfilled,(st,{payload})=>{ st.current=payload; });
-    b.addCase(aprobarExpediente.fulfilled,(st,{payload})=>{ st.current=payload; });
-    b.addCase(rechazarExpediente.fulfilled,(st,{payload})=>{ st.current=payload; });
+  initialState: { current: null, loading: false, error: null },
+  reducers: {
+    clearExpediente(state) {
+      state.current = null;
+      state.error = null;
+      state.loading = false;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchExpedienteById.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(fetchExpedienteById.fulfilled, (s, a) => { s.loading = false; s.current = a.payload; })
+      .addCase(fetchExpedienteById.rejected, (s, a) => { s.loading = false; s.error = a.error.message; })
+
+      .addCase(createExpediente.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(createExpediente.fulfilled, (s, a) => { s.loading = false; s.current = a.payload; })
+      .addCase(createExpediente.rejected, (s, a) => { s.loading = false; s.error = a.error.message; })
+
+      .addCase(updateExpediente.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(updateExpediente.fulfilled, (s, a) => { s.loading = false; s.current = a.payload; })
+      .addCase(updateExpediente.rejected, (s, a) => { s.loading = false; s.error = a.error.message; })
+
+      .addCase(sendExpedienteToReview.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(sendExpedienteToReview.fulfilled, (s, a) => { s.loading = false; s.current = a.payload; })
+      .addCase(sendExpedienteToReview.rejected, (s, a) => { s.loading = false; s.error = a.error.message; })
+
+      .addCase(approveExpediente.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(approveExpediente.fulfilled, (s, a) => { s.loading = false; s.current = a.payload; })
+      .addCase(approveExpediente.rejected, (s, a) => { s.loading = false; s.error = a.error.message; })
+
+      .addCase(rejectExpediente.pending, (s) => { s.loading = true; s.error = null; })
+      .addCase(rejectExpediente.fulfilled, (s, a) => { s.loading = false; s.current = a.payload; })
+      .addCase(rejectExpediente.rejected, (s, a) => { s.loading = false; s.error = a.error.message; });
   }
 });
-export const { setFilters } = slice.actions;
-export default slice.reducer;
+
+export const { clearExpediente } = expedientesSlice.actions;
+
+export const expedientesReducer = expedientesSlice.reducer;
+export default expedientesSlice.reducer;

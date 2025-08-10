@@ -19,7 +19,7 @@ import decisionesRoutes from './modules/decisiones/decisiones.routes.js';
 import adjuntosRoutes from './modules/adjuntos/adjuntos.routes.js';
 import bitacoraRoutes from './modules/bitacora/bitacora.routes.js';
 import reportesRoutes from './modules/reportes/reportes.routes.js';
-
+import localFilesRouter from './modules/files/files.routes.js';
 
 
 
@@ -58,6 +58,12 @@ app.use('/api/adjuntos', adjuntosRoutes);
 app.use('/api/bitacora', bitacoraRoutes);
 app.use('/api/reportes', reportesRoutes);
 
+
+
+const LOCAL_ROOT = path.join(process.cwd(), 'local_storage');
+
+app.use('/local', express.static(LOCAL_ROOT));           // sirve archivos
+app.use('/api/local-files', localFilesRouter);
 
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

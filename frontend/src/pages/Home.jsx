@@ -12,15 +12,15 @@ import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectAuth, selectReportes } from '../app/store';
-import { resumenReportes } from '../features/reportes/reportesSlice';
+import { fetchExpedientesResumen } from '../features/reportes/reportesSlice';
 
 function useRoleFlags() {
   const { user } = useAppSelector(selectAuth);
   const name = (user?.rol || user?.rol_nombre || '').toString().toLowerCase();
-  const isAdmin       = name.includes('admin')       || user?.CodigoRol === 1;
+  const isAdmin = name.includes('admin') || user?.CodigoRol === 1;
   const isCoordinator = name.includes('coordinador') || user?.CodigoRol === 2;
-  const isTecnico     = name.includes('tecnic')      || user?.CodigoRol === 3;
-  const isAuditor     = name.includes('audit')       || user?.CodigoRol === 4;
+  const isTecnico = name.includes('tecnic') || user?.CodigoRol === 3;
+  const isAuditor = name.includes('audit') || user?.CodigoRol === 4;
   return { isAdmin, isCoordinator, isTecnico, isAuditor };
 }
 
@@ -59,21 +59,29 @@ export default function Home() {
   const { isAdmin, isCoordinator, isTecnico } = useRoleFlags();
   const { resumen, loading } = useAppSelector(selectReportes);
 
+ 
+  const hasta = new Date();
+  const desde = new Date(); desde.setDate(hasta.getDate() - 30);
+
   useEffect(() => {
-    // Trae solo lo necesario para KPIs + listas cortas
-    dispatch(resumenReportes({ rango: 'mes', top: 5 })).catch(() => {});
+    dispatch(fetchExpedientesResumen({
+      desde: desde.toISOString(),
+      hasta: hasta.toISOString(),
+      
+    }));
   }, [dispatch]);
+
 
   const kpi = {
     registrados: resumen?.totales?.registrados ?? 0,
-    aprobados:   resumen?.totales?.aprobados ?? 0,
-    rechazados:  resumen?.totales?.rechazados ?? 0,
+    aprobados: resumen?.totales?.aprobados ?? 0,
+    rechazados: resumen?.totales?.rechazados ?? 0,
   };
 
   // Colecciones pequeñas para no “cargar” la vista
   const enRevision = resumen?.enRevision?.slice?.(0, 5) ?? [];
   const borradores = resumen?.borradores?.slice?.(0, 5) ?? [];
-  const actividad  = resumen?.actividad?.slice?.(0, 6) ?? [];
+  const actividad = resumen?.actividad?.slice?.(0, 6) ?? [];
 
   return (
     <Box py={{ base: 4, md: 8 }}>
@@ -131,7 +139,7 @@ export default function Home() {
         {/* KPIs compactos */}
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={6}>
           <KPI label="Registrados (mes)" value={kpi.registrados} loading={loading} />
-          <KPI label="Aprobados (mes)"  value={kpi.aprobados}  loading={loading} />
+          <KPI label="Aprobados (mes)" value={kpi.aprobados} loading={loading} />
           <KPI label="Rechazados (mes)" value={kpi.rechazados} loading={loading} />
         </SimpleGrid>
 
