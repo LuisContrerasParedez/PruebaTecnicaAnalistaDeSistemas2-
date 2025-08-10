@@ -268,6 +268,46 @@ const options = {
             estado: { type: 'string' }
           }
         },
+        Adjunto: {
+          type: 'object',
+          properties: {
+            CodigoAdjunto: { type: 'integer' },
+            entidad: { type: 'string', enum: ['EXPEDIENTE', 'INDICIO', 'USUARIO'] },
+            entidad_id: { type: 'integer' },
+            nombre_archivo: { type: 'string' },
+            ruta: { type: 'string' },
+            tipo_mime: { type: 'string' },
+            tamano_bytes: { type: 'integer' },
+            hash_opcional: { type: 'string', nullable: true },
+            subido_por: { type: 'integer' },
+            subido_por_nombre: { type: 'string' },
+            subido_en: { type: 'string', format: 'date-time' }
+          }
+        },
+        AdjuntoCreate: {
+          type: 'object',
+          required: ['entidad', 'entidadId', 'nombreArchivo', 'ruta', 'tipoMime', 'tamanoBytes'],
+          properties: {
+            entidad: { type: 'string', enum: ['EXPEDIENTE', 'INDICIO', 'USUARIO'] },
+            entidadId: { type: 'integer' },
+            nombreArchivo: { type: 'string' },
+            ruta: { type: 'string' },
+            tipoMime: { type: 'string' },
+            tamanoBytes: { type: 'integer' },
+            hashOpcional: { type: 'string', nullable: true }
+          }
+        },
+        AdjuntoUpdate: {
+          type: 'object',
+          properties: {
+            nombreArchivo: { type: 'string' },
+            ruta: { type: 'string' },
+            tipoMime: { type: 'string' },
+            tamanoBytes: { type: 'integer' },
+            hashOpcional: { type: 'string', nullable: true }
+          }
+        },
+
 
 
 

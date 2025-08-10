@@ -16,6 +16,7 @@ import catalogosRoutes from './modules/catalogos/catalogo.routes.js';
 import expedientesRoutes from './modules/expedientes/expedientes.routes.js';
 import indiciosRoutes from './modules/indicios/indicios.routes.js';
 import decisionesRoutes from './modules/decisiones/decisiones.routes.js';
+import adjuntosRoutes from './modules/adjuntos/adjuntos.routes.js';
 
 
 
@@ -51,6 +52,7 @@ app.use('/api/catalogos', catalogosRoutes);
 app.use('/api/expedientes', expedientesRoutes);
 app.use('/api/indicios', indiciosRoutes);
 app.use('/api/decisiones', decisionesRoutes);
+app.use('/api/adjuntos', adjuntosRoutes);
 
 // Para el resto de módulos cuando los tengas agrupados:
 // app.use('/api', apiRoutes);

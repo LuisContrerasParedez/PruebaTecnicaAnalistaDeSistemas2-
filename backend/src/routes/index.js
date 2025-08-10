@@ -7,6 +7,7 @@ import { catalogosRoutes } from '../modules/catalogos/catalogo.routes.js';
 import { expedientesRoutes} from '../modules/expedientes/expedientes.routes.js';
 import {indiciosRoutes} from '../modules/indicios/indicios.routes.js';
 import {decisionesRoutes} from '../modules/decisiones/decisiones.routes.js';
+import {adjuntosRoutes} from '../modules/adjuntos/adjuntos.routes.js';
 
 
 const r = Router();
@@ -18,5 +19,6 @@ r.use('/roles', rolesRoutes);
 r.use('/usuarios', usuariosRoutes);
 r.use('/indicios', indiciosRoutes);
 r.use('/decisiones', decisionesRoutes);
+r.use('/adjuntos', adjuntosRoutes);
 
 export default r;
