@@ -8,6 +8,7 @@ import { expedientesRoutes} from '../modules/expedientes/expedientes.routes.js';
 import {indiciosRoutes} from '../modules/indicios/indicios.routes.js';
 import {decisionesRoutes} from '../modules/decisiones/decisiones.routes.js';
 import {adjuntosRoutes} from '../modules/adjuntos/adjuntos.routes.js';
+import {bitacoraRoutes} from '../modules/bitacora/bitacora.routes.js';
 
 
 const r = Router();
@@ -20,5 +21,6 @@ r.use('/usuarios', usuariosRoutes);
 r.use('/indicios', indiciosRoutes);
 r.use('/decisiones', decisionesRoutes);
 r.use('/adjuntos', adjuntosRoutes);
+r.use('/bitacora', bitacoraRoutes);
 
 export default r;

@@ -307,6 +307,41 @@ const options = {
             hashOpcional: { type: 'string', nullable: true }
           }
         },
+        Bitacora: {
+          type: 'object',
+          properties: {
+            CodigoBitacora: { type: 'integer' },
+            CodigoUsuario: { type: 'integer' },
+            usuario_nombre: { type: 'string' },
+            accion: { type: 'string' },
+            entidad: { type: 'string' },
+            entidad_id: { type: 'integer' },
+            detalle_json: { type: 'string' },
+            ip: { type: 'string' },
+            creado_en: { type: 'string', format: 'date-time' }
+          }
+        },
+        BitacoraCreate: {
+          type: 'object',
+          required: ['accion'],
+          properties: {
+            accion: { type: 'string', example: 'EXPEDIENTE_CREAR' },
+            entidad: { type: 'string', example: 'EXPEDIENTE' },
+            entidadId: { type: 'integer', example: 123 },
+            detalle: {
+              oneOf: [
+                { type: 'string' },
+                {
+                  type: 'object',
+                  additionalProperties: true,
+                  example: { no_expediente: 'DICRI-2025-000001', cambios: { estado: ['Borrador', 'EnRevision'] } }
+                }
+              ]
+            },
+            ip: { type: 'string', example: '10.10.10.5' }
+          }
+        },
+
 
 
 

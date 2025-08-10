@@ -17,6 +17,7 @@ import expedientesRoutes from './modules/expedientes/expedientes.routes.js';
 import indiciosRoutes from './modules/indicios/indicios.routes.js';
 import decisionesRoutes from './modules/decisiones/decisiones.routes.js';
 import adjuntosRoutes from './modules/adjuntos/adjuntos.routes.js';
+import bitacoraRoutes from './modules/bitacora/bitacora.routes.js';
 
 
 
@@ -53,6 +54,7 @@ app.use('/api/expedientes', expedientesRoutes);
 app.use('/api/indicios', indiciosRoutes);
 app.use('/api/decisiones', decisionesRoutes);
 app.use('/api/adjuntos', adjuntosRoutes);
+app.use('/api/bitacora', bitacoraRoutes);
 
 // Para el resto de módulos cuando los tengas agrupados:
 // app.use('/api', apiRoutes);
