@@ -103,43 +103,67 @@ const options = {
           required: ['password'],
           properties: { password: { type: 'string' } }
         },
+        Rol: {
+          type: 'object',
+          properties: {
+            CodigoRol: { type: 'integer' },
+            nombre: { type: 'string' },
+            permisos: { type: 'string', description: 'JSON o texto' }
+          }
+        },
+        RolCreate: {
+          type: 'object',
+          required: ['nombre'],
+          properties: {
+            nombre: { type: 'string' },
+            permisos: { oneOf: [{ type: 'string' }, { type: 'object' }, { type: 'array' }] }
+          }
+        },
+        RolUpdate: {
+          type: 'object',
+          properties: {
+            nombre: { type: 'string' },
+            permisos: { oneOf: [{ type: 'string' }, { type: 'object' }, { type: 'array' }] }
+          }
+        },
 
 
 
-  // ---- Tus ejemplos previos (opcional) ----
-  Accion: {
-    type: 'object',
-    properties: {
-      id: { type: 'integer', example: 1 },
-      nombre: { type: 'string', example: 'Nueva acción' },
-      descripcion: { type: 'string', nullable: true, example: 'Descripción opcional' },
-      fechaCreacion: { type: 'string', format: 'date-time' }
-    }
+
+        // ---- Tus ejemplos previos (opcional) ----
+        Accion: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            nombre: { type: 'string', example: 'Nueva acción' },
+            descripcion: { type: 'string', nullable: true, example: 'Descripción opcional' },
+            fechaCreacion: { type: 'string', format: 'date-time' }
+          }
+        },
+        AccionCreate: {
+          type: 'object',
+          required: ['nombre'],
+          properties: {
+            nombre: { type: 'string' },
+            descripcion: { type: 'string', nullable: true }
+          }
+        },
+        AccionUpdate: {
+          type: 'object',
+          properties: {
+            nombre: { type: 'string' },
+            descripcion: { type: 'string', nullable: true }
+          }
+        }
+
+      }
+
+    },
+    tags: [{ name: 'Auth' }]
   },
-  AccionCreate: {
-    type: 'object',
-    required: ['nombre'],
-    properties: {
-      nombre: { type: 'string' },
-      descripcion: { type: 'string', nullable: true }
-    }
-  },
-  AccionUpdate: {
-    type: 'object',
-    properties: {
-      nombre: { type: 'string' },
-      descripcion: { type: 'string', nullable: true }
-    }
-  }
 
-}
-
-},
-tags: [{ name: 'Auth' }]
-  },
-
-// asegúrate de que el glob apunte a tus rutas ESM
-apis: [path.resolve(process.cwd(), 'src/modules/**/*.routes.js')],
+  // asegúrate de que el glob apunte a tus rutas ESM
+  apis: [path.resolve(process.cwd(), 'src/modules/**/*.routes.js')],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

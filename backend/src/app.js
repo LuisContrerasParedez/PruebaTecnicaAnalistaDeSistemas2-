@@ -11,6 +11,7 @@ import { prisma } from './lib/prisma.js';
 // rutas
 import authRoutes from './modules/auth/auth.routes.js';
 import usuariosRoutes from './modules/usuarios/usuarios.routes.js';
+import rolesRoutes from './modules/roles/roles.routes.js';
 
 
 
@@ -40,6 +41,8 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: t
 // Rutas API
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/roles', rolesRoutes);
+
 // Para el resto de módulos cuando los tengas agrupados:
 // app.use('/api', apiRoutes);
 
