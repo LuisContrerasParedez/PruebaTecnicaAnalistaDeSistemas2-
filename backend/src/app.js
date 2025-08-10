@@ -18,6 +18,7 @@ import indiciosRoutes from './modules/indicios/indicios.routes.js';
 import decisionesRoutes from './modules/decisiones/decisiones.routes.js';
 import adjuntosRoutes from './modules/adjuntos/adjuntos.routes.js';
 import bitacoraRoutes from './modules/bitacora/bitacora.routes.js';
+import reportesRoutes from './modules/reportes/reportes.routes.js';
 
 
 
@@ -55,9 +56,8 @@ app.use('/api/indicios', indiciosRoutes);
 app.use('/api/decisiones', decisionesRoutes);
 app.use('/api/adjuntos', adjuntosRoutes);
 app.use('/api/bitacora', bitacoraRoutes);
+app.use('/api/reportes', reportesRoutes);
 
-// Para el resto de módulos cuando los tengas agrupados:
-// app.use('/api', apiRoutes);
 
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
