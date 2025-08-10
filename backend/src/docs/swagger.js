@@ -126,6 +126,34 @@ const options = {
             permisos: { oneOf: [{ type: 'string' }, { type: 'object' }, { type: 'array' }] }
           }
         },
+        Catalogo: {
+          type: 'object',
+          properties: {
+            CodigoCatalogo: { type: 'integer' },
+            tipo: { type: 'string', example: 'color' },
+            valor: { type: 'string', example: 'Rojo' },
+            activo: { type: 'boolean', example: true }
+          }
+        },
+        CatalogoCreate: {
+          type: 'object',
+          required: ['tipo', 'valor'],
+          properties: {
+            tipo: { type: 'string', example: 'tipo_indicio' },
+            valor: { type: 'string', example: 'Arma blanca' },
+            activo: { type: 'boolean', default: true }
+          }
+        },
+        CatalogoUpdate: {
+          type: 'object',
+          properties: {
+            tipo: { type: 'string' },
+            valor: { type: 'string' },
+            activo: { type: 'boolean' }
+          }
+        },
+        
+        
 
 
 
