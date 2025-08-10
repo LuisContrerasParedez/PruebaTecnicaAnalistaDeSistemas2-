@@ -16,13 +16,13 @@ import Home from './pages/Home.jsx';
 // Listado del técnico
 import ExpedientesTecnicoList from './pages/ExpedientesTecnicoList.jsx';
 
-// 👇 NUEVO: gestión (refactor), ahora en /pages/expedientes/
 import ExpedienteGestionPage from './pages/expedientes/ExpedienteGestionPage.jsx';
 
 // Administración (solo Admin)
 import AdminLayout  from './pages/admin/AdminLayout.jsx';
 import UsuariosPage from './pages/admin/UsuariosPage.jsx';
 import RolesPage    from './pages/admin/RolesPage.jsx';
+import ReportesPage from './pages/admin/ReportesPage.jsx';
 
 // Shell con navbar + container
 function ShellOutlet() {
@@ -66,6 +66,7 @@ export default function App() {
               <Route index element={<Navigate to="/admin/usuarios" replace />} />
               <Route path="usuarios" element={<UsuariosPage />} />
               <Route path="roles"    element={<RolesPage />} />
+              <Route path="reportes" element={<ReportesPage />} />
             </Route>
           </Route>
 

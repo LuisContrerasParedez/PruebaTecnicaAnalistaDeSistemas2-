@@ -7,6 +7,7 @@ import {
 const tabs = [
   { to: '/admin/usuarios', label: 'Usuarios' },
   { to: '/admin/roles',    label: 'Roles' },
+  { to: '/admin/reportes', label: 'Reportes' },
 ];
 
 export default function AdminLayout() {

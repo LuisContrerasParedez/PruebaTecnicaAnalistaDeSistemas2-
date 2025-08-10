@@ -127,7 +127,7 @@ export default function Home() {
                   </Button>
                 )}
                 {(isCoordinator || isAdmin) && (
-                  <Button as={Link} to="/reportes" leftIcon={<CheckCircleIcon />}>
+                  <Button as={Link} to="/admin/reportes" leftIcon={<CheckCircleIcon />}>
                     Reportes
                   </Button>
                 )}
