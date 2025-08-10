@@ -5,7 +5,7 @@ import {
   Badge, Spinner, Text, Stack, useToast
 } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchExpedientes, setFilters, selectExpedientes } from '../features/expedientes/expedientesSlice';
+import { fetchExpedientes, setFilters } from '../features/expedientes/expedientesSlice';
 
 const EstadoBadge = ({ value }) => {
   const map = {
@@ -23,7 +23,6 @@ export default function ExpedientesList() {
   const dispatch = useDispatch();
   const nav = useNavigate();
   const toast = useToast();
-  const { items, loading, error, total, page, pageSize, filters } = useSelector(selectExpedientes);
 
   useEffect(() => { dispatch(fetchExpedientes(filters)); }, [dispatch]);
 

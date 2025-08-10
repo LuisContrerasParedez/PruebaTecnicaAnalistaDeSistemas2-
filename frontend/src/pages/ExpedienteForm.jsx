@@ -70,7 +70,7 @@ export default function ExpedienteForm() {
           </FormControl>
 
           <HStack>
-            <Button type="submit" isLoading={loading}>Guardar borrador</Button>
+            <Button type="submit" isLoading={loading}>Guardar </Button>
             <Button variant="glass" onClick={() => nav(-1)} type="button">Cancelar</Button>
           </HStack>
         </VStack>
