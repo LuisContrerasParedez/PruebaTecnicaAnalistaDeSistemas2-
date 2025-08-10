@@ -11,8 +11,11 @@ pnpm-debug.log*
 # Archivos de entorno
 # =========================
 .env
+.env.docker
 backend/.env
+backend/.env.docker
 frontend/.env
+frontend/.env.docker
 
 # =========================
 # Logs
@@ -59,3 +62,5 @@ Thumbs.db
 # Otros
 # =========================
 *.tgz
+!sql
+!sql/**
