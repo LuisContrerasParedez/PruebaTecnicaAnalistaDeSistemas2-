@@ -1,5 +1,5 @@
 // backend/src/controllers/acciones.controller.js
-import { prisma } from '../prisma.js';
+import { prisma } from '../lib/prisma.js';
 
 export const listar = async (_req, res, next) => {
   try {
