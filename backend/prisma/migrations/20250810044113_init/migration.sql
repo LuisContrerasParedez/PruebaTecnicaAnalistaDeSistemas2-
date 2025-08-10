@@ -1,0 +1,25 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- CreateTable
+CREATE TABLE [dbo].[Acciones] (
+    [Id] INT NOT NULL IDENTITY(1,1),
+    [Nombre] NVARCHAR(100) NOT NULL,
+    [Descripcion] NVARCHAR(255),
+    [FechaCreacion] DATETIME2 NOT NULL CONSTRAINT [Acciones_FechaCreacion_df] DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT [Acciones_pkey] PRIMARY KEY CLUSTERED ([Id])
+);
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
