@@ -254,6 +254,22 @@ const options = {
             observaciones: { type: 'string' }
           }
         },
+        Decision: {
+          type: 'object',
+          properties: {
+            CodigoDecision: { type: 'integer' },
+            CodigoExpediente: { type: 'integer' },
+            tipo: { type: 'string', enum: ['Aprobado', 'Rechazado'] },
+            justificacion: { type: 'string', nullable: true },
+            decidido_por: { type: 'integer' },
+            decidido_por_nombre: { type: 'string' },
+            decidido_en: { type: 'string', format: 'date-time' },
+            no_expediente: { type: 'string' },
+            estado: { type: 'string' }
+          }
+        },
+
+
 
 
 
