@@ -152,8 +152,61 @@ const options = {
             activo: { type: 'boolean' }
           }
         },
-        
-        
+
+        Expediente: {
+          type: 'object',
+          properties: {
+            CodigoExpediente: { type: 'integer' },
+            no_expediente: { type: 'string', example: 'DICRI-2025-000123' },
+            fiscalia: { type: 'string' },
+            unidad: { type: 'string' },
+            descripcion: { type: 'string' },
+            ubicacion_texto: { type: 'string' },
+            municipio: { type: 'string' },
+            departamento: { type: 'string' },
+            estado: { type: 'string', enum: ['Borrador', 'EnRevision', 'Rechazado', 'Aprobado'] },
+            CodigoTecnico: { type: 'integer' },
+            CodigoCoordinador: { type: 'integer', nullable: true },
+            creado_en: { type: 'string', format: 'date-time' },
+            actualizado_en: { type: 'string', format: 'date-time' },
+            tecnico_nombre: { type: 'string' },
+            coordinador_nombre: { type: 'string', nullable: true }
+          }
+        },
+        ExpedienteCreate: {
+          type: 'object',
+          properties: {
+            fiscalia: { type: 'string' },
+            unidad: { type: 'string' },
+            descripcion: { type: 'string' },
+            ubicacion_texto: { type: 'string' },
+            municipio: { type: 'string' },
+            departamento: { type: 'string' },
+            codigoTecnico: { type: 'integer', description: 'Si no hay auth, envía aquí el técnico' }
+          }
+        },
+        ExpedienteUpdate: {
+          type: 'object',
+          properties: {
+            fiscalia: { type: 'string' },
+            unidad: { type: 'string' },
+            descripcion: { type: 'string' },
+            ubicacion_texto: { type: 'string' },
+            municipio: { type: 'string' },
+            departamento: { type: 'string' }
+          }
+        },
+        ExpedienteSendToReview: {
+          type: 'object',
+          required: ['coordinadorId'],
+          properties: { coordinadorId: { type: 'integer' } }
+        },
+        ExpedienteReject: {
+          type: 'object',
+          required: ['justificacion'],
+          properties: { justificacion: { type: 'string', minLength: 10 } }
+        },
+
 
 
 
